@@ -263,7 +263,7 @@ const Login = () => {
                 mb: 2,
               }}
             >
-              {loginError.error.message}
+              {loginError?.error.message}
             </Typography>
           )}
           {loginStatus === "pending" && (

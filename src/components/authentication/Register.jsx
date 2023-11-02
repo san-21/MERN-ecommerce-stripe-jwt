@@ -282,7 +282,7 @@ const Register = () => {
                 mb: 2,
               }}
             >
-              {registerError.error.message}
+              {registerError?.error.message}
             </Typography>
           )}
           {registerStatus === "pending" && (

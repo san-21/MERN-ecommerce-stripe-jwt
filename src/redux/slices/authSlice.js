@@ -21,7 +21,7 @@ export const registerUser = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const res = await axios.post(
-        `http://localhost:4000/api/register`,
+        `https://sanwebsiteapi.onrender.com/api/register`,
         userData
       );
       localStorage.setItem("token", res.data);
@@ -36,7 +36,10 @@ export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (userData, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`http://localhost:4000/api/login`, userData);
+      const res = await axios.post(
+        `https://sanwebsiteapi.onrender.com/api/login`,
+        userData
+      );
       localStorage.setItem("token", res.data);
       return res.data;
     } catch (error) {
