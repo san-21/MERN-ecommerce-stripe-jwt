@@ -10,11 +10,12 @@ import loginRouter from "./routes/loginRoute.js";
 import { mongoConnect } from "./config/mongoDb.js";
 import stripeRoute from "./routes/stripe.js";
 import webhookRouter from "./routes/stripeWebhook.js";
+import { corsSetting } from "./config/corsSetting.js";
 mongoConnect();
 const app = express();
 const PORT = 4000;
 
-app.use(cors());
+app.use(cors(corsSetting));
 
 app.use(bodyParser.json());
 
