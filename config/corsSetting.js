@@ -1,6 +1,6 @@
 const allowedOrigins = [
+  "https://sanwebsite.onrender.com",
   "http://localhost:3000",
-  "https://sanwebsite.onrender.com/",
 ];
 export const corsSetting = {
   origin: (origin, callback) => {
