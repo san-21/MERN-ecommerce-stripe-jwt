@@ -8,8 +8,9 @@ import { Box, Button, CardActionArea, Stack } from "@mui/material";
 import Rating from "@mui/material/Rating";
 import { AddOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-
+import { useTheme } from "@mui/material/styles";
 const Product = ({ product }) => {
+  const theme = useTheme();
   const navigate = useNavigate();
   const [isHover, setIsHover] = useState(false);
 
@@ -57,14 +58,15 @@ const Product = ({ product }) => {
               sx={{
                 alignSelf: "center",
                 justifySelf: "center",
-                border: "1.5px solid blue",
-
-                backgroundColor: "white",
-                opacity: "0.9",
+                border: `1.5px solid ${theme.palette.primary[500]}`,
+                fontWeight: "bold",
+                backgroundColor: `${theme.palette.white[500]}`,
+                opacity: "0.7",
                 m: "0 6px 10px 10px",
-                color: "alltextcolor.main",
+                color: `${theme.palette.text[500]}`,
                 "&:hover": {
-                  backgroundColor: "alltextcolor.light",
+                  backgroundColor: `${theme.palette.white[600]}`,
+                  color: `${theme.palette.text[500]}`,
                 },
               }}
               size="large"

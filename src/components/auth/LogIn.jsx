@@ -10,6 +10,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { toast } from "react-toastify";
 import React, { useState } from "react";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
@@ -64,6 +65,12 @@ const LogIn = () => {
     dispatch(setLoginClose());
     dispatch(setSignupOpen());
   };
+  const handleErrorToastify = (error) => {
+    toast.error(error?.response?.data.message, {
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 400,
+    });
+  };
   const handleSignin = async (e) => {
     e.preventDefault();
 
@@ -107,9 +114,10 @@ const LogIn = () => {
           console.log(message, token);
           dispatch(setUserAuthenticated());
           dispatch(setLoginClose());
-          navigate("/");
+          // navigate("/");
           dispatch(setToken({ token: token }));
         } catch (error) {
+          handleErrorToastify(error);
           setIsLoading(false);
           setError(true);
           setErrMessage(error?.response?.data.message);
