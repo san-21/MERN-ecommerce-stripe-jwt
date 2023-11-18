@@ -1,10 +1,12 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true, minLength: 3, maxLength: 100 },
-  email: { type: String, required: true, minLength: 3, maxLength: 100 },
-  password: { type: String, required: true, minLength: 3 },
+const UserSchema = new mongoose.Schema({
+  fullname: { type: String, required: true, minLength: 5, maxLength: 100 },
+  email: { type: String, required: true },
+  password: { type: String, required: true, minLength: 7 },
+  resetToken: { type: String, default: undefined },
+  resetTokenExpiry: { type: Date },
 });
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model("Users", UserSchema);
 export default User;
