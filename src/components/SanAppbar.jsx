@@ -3,6 +3,7 @@ import {
   Badge,
   Box,
   Button,
+  CircularProgress,
   Divider,
   IconButton,
   InputBase,
@@ -11,47 +12,33 @@ import {
   Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import TopNotification from "./TopNotification";
 import { styled, useTheme } from "@mui/material/styles";
 import logo from "../assets/images/sanlogo1.png";
 import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
 /////////////////////////////////////////Icons //////////////////
-import StoreIcon from "@mui/icons-material/Store";
-import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
-import Cart from "./Tooltip/EmpityCartTooltip";
-import Signin from "./Tooltip/Signin";
 
 import { Link, useNavigate } from "react-router-dom";
 import EmpityCartTooltip from "./Tooltip/EmpityCartTooltip";
 import ShoppingBagListTooltip from "./Tooltip/ShoppingBagListTooltip";
 
 import { useDispatch, useSelector } from "react-redux";
-import {
-  setDialogOpen,
-  setLoginDialogOpen,
-} from "../redux/slices/authModalSlice";
+
 import {
   setFilteredProducts,
   setSearchTerm,
 } from "../redux/slices/productSlice";
-import { logout } from "../redux/slices/authSlice";
+import { logout } from "../redux/slices/auth/authReducer";
+import {
+  setLoginOpen,
+  setSignupOpen,
+} from "../redux/slices/auth/authModalReducer";
+import { instance } from "../services/axiosClient";
+import { setUserUnAuthenticated } from "../redux/slices/auth/authenticateReducer";
 
-const LightTooltip = styled(({ className, ...props }) => (
-  <Tooltip {...props} classes={{ popper: className }} />
-))(({ theme }) => ({
-  [`& .${tooltipClasses.tooltip}`]: {
-    backgroundColor: `${theme.palette.common.white}`,
-    color: "rgba(0, 0, 0, 0.87)",
-    boxShadow: theme.shadows[7],
-    describeChild: true,
-
-    fontSize: 11,
-    width: "270px",
-    height: "520px",
-  },
-}));
 const StyledButton = styled(Button)(({ theme }) => ({
   size: "small",
 
@@ -86,6 +73,9 @@ const ShoppinBagTooltipStyle = styled(({ className, ...props }) => (
 }));
 const SanAppbar = () => {
   const auth = useSelector((state) => state.auth);
+  const userAuthenticated = useSelector(
+    (state) => state.authenticate.userAuthenticated
+  );
 
   const navigate = useNavigate();
   const quantity = useSelector((state) => state.cart.totalQuantity);
@@ -93,6 +83,7 @@ const SanAppbar = () => {
   const theme = useTheme();
   const dispatch = useDispatch();
   const products = useSelector((state) => state.product.products);
+  const [signoutLoading, setSignoutLoading] = useState(false);
 
   const handleSearch = (event) => {
     const searchTerm = event.target.value;
@@ -103,9 +94,27 @@ const SanAppbar = () => {
     );
     dispatch(setFilteredProducts({ data: filteredresult }));
   };
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/");
+  const handleSignout = async () => {
+    setSignoutLoading(true);
+
+    try {
+      const result = await instance.post("/auth/logout");
+      dispatch(logout());
+      dispatch(setUserUnAuthenticated());
+      console.log(result);
+
+      setSignoutLoading(false);
+
+      navigate("/", { replace: true });
+    } catch (error) {
+      setSignoutLoading(false);
+    }
+  };
+  const handleSignupOpen = () => {
+    dispatch(setSignupOpen());
+  };
+  const handleSigninOpen = () => {
+    dispatch(setLoginOpen());
   };
   return (
     <AppBar
@@ -123,7 +132,7 @@ const SanAppbar = () => {
           display: "flex",
           justifyContent: "space-around",
           alignItems: "center",
-          backgroundColor: `${theme.palette.background[500]}`,
+          backgroundColor: `${theme.palette.white[500]}`,
           color: `${theme.palette.text[500]}`,
           height: "90px",
         }}
@@ -171,13 +180,7 @@ const SanAppbar = () => {
             padding: "20px",
           }}
         >
-          {/* <LightTooltip title={<Signin />} arrow>
-            <StyledButton variant="text">
-              <Typography variant="p">Sign In</Typography>
-              <KeyboardArrowDownIcon />
-            </StyledButton>
-          </LightTooltip> */}
-          {auth.loginStatus === "success" && (
+          {userAuthenticated && (
             <Typography
               sx={{
                 fontWeight: 600,
@@ -185,26 +188,9 @@ const SanAppbar = () => {
                 fontSize: "16px",
               }}
             >
-              {auth.name}
+              {auth.fullname}
             </Typography>
           )}
-
-          <StyledButton variant="text">
-            <StoreIcon
-              sx={{
-                pr: 0.5,
-              }}
-            />
-            <Typography variant="p">Stores</Typography>
-          </StyledButton>
-          <StyledButton variant="text">
-            <Inventory2OutlinedIcon
-              sx={{
-                pr: 0.5,
-              }}
-            />
-            <Typography variant="p">Purchases</Typography>
-          </StyledButton>
 
           {cart === 0 ? (
             <CartLightTooltip
@@ -256,24 +242,43 @@ const SanAppbar = () => {
             </ShoppinBagTooltipStyle>
           )}
 
-          {!auth.userLoaded ? (
+          <Button
+            onClick={!userAuthenticated ? handleSignupOpen : handleSignout}
+            variant="contained"
+            sx={{
+              width: "120px",
+              height: "35px",
+              ml: 2,
+              textTransform: "capitalize",
+              fontWeight: "bold",
+              fontSize: "13px",
+            }}
+          >
+            {!userAuthenticated && !signoutLoading && "Join Now"}
+            {userAuthenticated && !signoutLoading && "Sign Out"}
+            {signoutLoading && (
+              <CircularProgress
+                size={30}
+                sx={{
+                  color: `${theme.palette.background[500]}`,
+                }}
+              />
+            )}
+          </Button>
+          {!userAuthenticated && !signoutLoading && (
             <Button
-              sx={{
-                textTransform: "capitalize",
-                size: { sm: "small", md: "small" },
-              }}
-              variant="contained"
-              onClick={() => dispatch(setLoginDialogOpen())}
-            >
-              Sign In || Register
-            </Button>
-          ) : (
-            <Button
-              sx={{ textTransform: "capitalize", color: "primary" }}
+              onClick={!userAuthenticated && handleSigninOpen}
               variant="outlined"
-              onClick={handleLogout}
+              sx={{
+                width: "120px",
+                height: "35px",
+                ml: 2,
+                textTransform: "capitalize",
+                fontWeight: "bold",
+                fontSize: "13px",
+              }}
             >
-              Logout
+              Log In
             </Button>
           )}
         </Box>
@@ -288,13 +293,7 @@ const SanAppbar = () => {
           padding: "20px",
         }}
       >
-        {/* <LightTooltip title={<Signin />} arrow>
-          <StyledButton variant="text">
-            <Typography variant="p">Sign In</Typography>
-            <KeyboardArrowDownIcon />
-          </StyledButton>
-        </LightTooltip> */}
-        {auth.loginStatus === "success" && (
+        {userAuthenticated && (
           <Typography
             sx={{
               fontWeight: 600,
@@ -302,25 +301,9 @@ const SanAppbar = () => {
               fontSize: "13px",
             }}
           >
-            {auth.name}
+            {auth.fullname}
           </Typography>
         )}
-        <StyledButton variant="text">
-          <StoreIcon
-            sx={{
-              pr: 0.5,
-            }}
-          />
-          <Typography variant="p">Stores</Typography>
-        </StyledButton>
-        <StyledButton variant="text">
-          <Inventory2OutlinedIcon
-            sx={{
-              pr: 0.5,
-            }}
-          />
-          <Typography variant="p">Purchases</Typography>
-        </StyledButton>
 
         {cart === 0 ? (
           <CartLightTooltip
@@ -372,25 +355,43 @@ const SanAppbar = () => {
           </ShoppinBagTooltipStyle>
         )}
 
-        {!auth.userLoaded ? (
+        <Button
+          onClick={!userAuthenticated ? handleSignupOpen : handleSignout}
+          variant="contained"
+          sx={{
+            width: "120px",
+            height: "35px",
+
+            textTransform: "capitalize",
+            fontWeight: "bold",
+            fontSize: "13px",
+          }}
+        >
+          {!userAuthenticated && !signoutLoading && "Join Now"}
+          {userAuthenticated && !signoutLoading && "Sign Out"}
+          {signoutLoading && (
+            <CircularProgress
+              size={30}
+              sx={{
+                color: `${theme.palette.background[500]}`,
+              }}
+            />
+          )}
+        </Button>
+        {!userAuthenticated && !signoutLoading && (
           <Button
-            size="small"
-            sx={{
-              textTransform: "capitalize",
-            }}
-            variant="contained"
-            onClick={() => dispatch(setLoginDialogOpen())}
-          >
-            Sign In || Register
-          </Button>
-        ) : (
-          <Button
-            size="small"
-            sx={{ textTransform: "capitalize" }}
+            onClick={!userAuthenticated && handleSigninOpen}
             variant="outlined"
-            onClick={handleLogout}
+            sx={{
+              width: "120px",
+              height: "35px",
+              ml: 2,
+              textTransform: "capitalize",
+              fontWeight: "bold",
+              fontSize: "13px",
+            }}
           >
-            Logout
+            Log In
           </Button>
         )}
       </Box>
@@ -400,17 +401,6 @@ const SanAppbar = () => {
           marginTop: 3,
         }}
       />
-      {/* <Box>
-        <ul
-          style={{
-            color: "black",
-          }}
-        >
-          {filteredProducts.map((product) => (
-            <li key={product.id}>{product.title}</li>
-          ))}
-        </ul>
-      </Box> */}
     </AppBar>
   );
 };

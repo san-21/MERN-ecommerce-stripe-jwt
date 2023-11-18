@@ -9,72 +9,169 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@emotion/react";
 import CloseIcon from "@mui/icons-material/Close";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 
-import GoogleIcon from "@mui/icons-material/Google";
-import LogInButton from "./Buttons/LogInButton";
-import { useDispatch, useSelector } from "react-redux";
-import { registerUser } from "../../redux/slices/authSlice";
+// import GoogleIcon from "@mui/icons-material/Google";
+// import LogInButton from "./Buttons/LogInButton";
+
+import { correctEmail } from "../../validate/AuthValidation";
 import {
-  setDialogClose,
-  setLoginDialogOpen,
-} from "../../redux/slices/authModalSlice";
-import { useNavigate } from "react-router-dom";
+  setLoginOpen,
+  setSignupClose,
+} from "../../redux/slices/auth/authModalReducer";
+import { useDispatch, useSelector } from "react-redux";
 
-const Register = () => {
-  const navigate = useNavigate();
-  const isRegisterDialogOpen = useSelector(
-    (state) => state.authModal.registerDialogOpen
-  );
-  const registerError = useSelector((state) => state.auth.registerError);
-  const registerStatus = useSelector((state) => state.auth.registerStatus);
-  const _id = useSelector((state) => state.auth._id);
+import { instance } from "../../services/axiosClient";
+import { toast } from "react-toastify";
 
-  const dispatch = useDispatch();
-
-  const [user, setUser] = useState({
-    name: "",
-    email: "",
-    password: "",
+const handleSuccessToastify = () => {
+  toast.success("Registered Suucessfullly", {
+    position: toast.POSITION.TOP_RIGHT,
+    autoClose: 400,
   });
+};
+const handleErrorToastify = () => {
+  toast.error("Registration Failed", {
+    position: toast.POSITION.TOP_RIGHT,
+    autoClose: 400,
+  });
+};
+const handleWarningToastify = () => {
+  toast.warning("Fill Credential Correctly", {
+    position: toast.POSITION.TOP_LEFT,
+    delay: 1000,
+  });
+};
 
+const SignUp = () => {
+  const dispatch = useDispatch();
+  const open = useSelector((state) => state.authModal.signupOpen);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleHidePassword = () => {
-    setShowPassword(false);
-  };
-  const handleShowPassword = () => {
-    setShowPassword(true);
+  const [user, setUser] = useState({
+    fullname: "",
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  console.log(user);
+
+  const navigateToSignin = () => {
+    dispatch(setSignupClose());
+    dispatch(setLoginOpen());
   };
 
-  const handleSubmit = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    dispatch(registerUser(user));
-    dispatch(setLoginDialogOpen());
-  };
-  const handleRegisterDialogClose = () => {
-    dispatch(setDialogClose());
-  };
-  useEffect(() => {
-    if (registerStatus === "success") {
-      dispatch(setDialogClose());
-      dispatch(setLoginDialogOpen());
+    setIsLoading(true);
+
+    if (
+      user.fullname.length > 6 &&
+      user.email.length !== 0 &&
+      user.password.length > 7 &&
+      correctEmail(user.email)
+    ) {
+      try {
+        const response = await instance.post(
+          "/auth/register",
+          {
+            fullname: user.fullname,
+            email: user.email,
+            password: user.password,
+          }
+          // {
+          //   withCredentials: true,
+          // }
+        );
+        const result = await response.data;
+
+        setSuccess(result?.message);
+        console.log(result.message);
+        console.log(result.data);
+
+        setTimeout(() => {
+          setSuccess(null);
+        }, 3000);
+        setIsLoading(false);
+        setError(false);
+        setUser({
+          fullname: "",
+          email: "",
+          password: "",
+        });
+        handleSuccessToastify();
+        dispatch(setSignupClose());
+        dispatch(setLoginOpen());
+      } catch (error) {
+        handleErrorToastify();
+        console.log(error);
+        setIsLoading(false);
+        setError(true);
+        setErrorMessage(error.response?.data.message);
+      }
     }
-  }, [registerStatus]);
+    try {
+      if (user.password.length < 8) {
+        setError(true);
+        setIsLoading(false);
+        setTimeout(() => {
+          setError(false);
+        }, 3000);
+        setErrorMessage("Password must be at least 7 characters");
+      }
+      if (user.fullname.length < 6) {
+        setError(true);
+        setIsLoading(false);
+        setTimeout(() => {
+          setError(false);
+        }, 3000);
+        setErrorMessage("Name must be at least 6 characters");
+      }
+      if (!correctEmail(user.email)) {
+        setError(true);
+        setIsLoading(false);
+        setTimeout(() => {
+          setError(false);
+        }, 3000);
+        setErrorMessage("Email must be correct format");
+      }
+      if (user.email.length < 3) {
+        setError(true);
+        setIsLoading(false);
+        setTimeout(() => {
+          setError(false);
+        }, 3000);
+        setErrorMessage("Email must be more character");
+      }
+    } catch (error) {
+      setError(true);
+      setIsLoading(false);
+      setTimeout(() => {
+        setError(false);
+      }, 3000);
+      setErrorMessage(error.response?.data.message);
+    }
+  };
+
+  const handleSignupClose = () => {
+    dispatch(setSignupClose());
+  };
   return (
     <Dialog
-      backdropClick
       disableEscapeKeyDown
       fullScreen={fullScreen}
-      open={isRegisterDialogOpen}
-      onClose={handleRegisterDialogClose}
+      open={open}
+      onClose={handleSignupClose}
       sx={{
         "& .MuiPaper-root": {
           borderRadius: "6px",
@@ -85,7 +182,7 @@ const Register = () => {
       <Box
         sx={{
           width: "500px",
-          height: "100vh",
+          height: "800px",
           backgroundColor: "white",
         }}
       >
@@ -97,7 +194,7 @@ const Register = () => {
             pt: 1,
           }}
         >
-          <IconButton onClick={handleRegisterDialogClose}>
+          <IconButton onClick={handleSignupClose}>
             <CloseIcon
               fontSize="medium"
               sx={{
@@ -134,34 +231,30 @@ const Register = () => {
             },
           }}
         >
-          <form onSubmit={handleSubmit}>
+          <form method="post" onSubmit={handleSignup}>
             <FormControl fullWidth>
               <label
-                htmlFor="name"
+                htmlFor="fullname"
                 style={{
                   fontSize: "12px",
                   fontWeight: 700,
                 }}
               >
-                NAME
+                FULLNAME
               </label>
               <TextField
+                onChange={(event) =>
+                  setUser({ ...user, fullname: event.target.value })
+                }
                 required
-                placeholder="your name"
                 id="outlined-basic"
                 variant="outlined"
-                name="name"
+                name="fullname"
                 type="text"
                 sx={{ marginTop: 1 }}
-                onChange={(e) => setUser({ ...user, name: e.target.value })}
               />
             </FormControl>
-            <FormControl
-              fullWidth
-              sx={{
-                mt: 2,
-              }}
-            >
+            <FormControl fullWidth>
               <label
                 htmlFor="email"
                 style={{
@@ -172,14 +265,15 @@ const Register = () => {
                 EMAIL
               </label>
               <TextField
+                onChange={(event) =>
+                  setUser({ ...user, email: event.target.value })
+                }
                 required
-                placeholder="name@email.com"
                 id="outlined-basic"
                 variant="outlined"
                 name="email"
-                type="email"
-                sx={{ marginTop: 1 }}
-                onChange={(e) => setUser({ ...user, email: e.target.value })}
+                type="text"
+                sx={{ marginTop: 2 }}
               />
             </FormControl>
             <FormControl
@@ -199,15 +293,16 @@ const Register = () => {
               </label>
 
               <TextField
+                onChange={(event) =>
+                  setUser({ ...user, password: event.target.value })
+                }
                 position="relative"
                 required
-                placeholder="Enter your password"
                 id="outlined-basic"
                 variant="outlined"
-                name="password"
+                name="email"
                 type={showPassword ? "text" : "password"}
                 sx={{ marginTop: 1 }}
-                onChange={(e) => setUser({ ...user, password: e.target.value })}
               />
               <Box
                 sx={{
@@ -219,7 +314,7 @@ const Register = () => {
               >
                 {!showPassword && (
                   <IconButton
-                    onClick={handleShowPassword}
+                    onClick={() => setShowPassword((p) => !p)}
                     sx={{
                       "&:hover": {
                         color: `${theme.palette.indigo[500]}`,
@@ -231,10 +326,10 @@ const Register = () => {
                 )}
                 {showPassword && (
                   <IconButton
-                    onClick={handleHidePassword}
+                    onClick={() => setShowPassword((p) => !p)}
                     sx={{
                       "&:hover": {
-                        color: `${theme.palette.primary[500]}`,
+                        color: `${theme.palette.blue[500]}`,
                       },
                     }}
                   >
@@ -245,75 +340,35 @@ const Register = () => {
             </FormControl>
 
             <Button
+              type="submit"
               variant="outlilned"
               fullWidth
-              type="submit"
               sx={{
                 height: "48px",
                 mt: 3,
                 mb: 2,
                 fontSize: "15px",
                 textTransform: "capitalize",
-                color: `${theme.palette.common.white}`,
+                color: `${theme.palette.white[500]}`,
                 backgroundColor: `${theme.palette.indigo[500]}`,
                 fontWeight: 700,
                 "&:hover": {
                   backgroundColor: `${theme.palette.indigo[600]}`,
                 },
+                textAlign: "center",
               }}
             >
-              {registerStatus === "pending" ? (
-                <CircularProgress
-                  sx={{
-                    color: theme.palette.common.white,
-                  }}
-                />
+              {isLoading ? (
+                <CircularProgress color="inherit" size={30} />
               ) : (
-                "Register"
+                "Sign Up"
               )}
             </Button>
+            {error && !isLoading && (
+              <Typography color="error">{errorMessage}</Typography>
+            )}
+            {success && <Typography color="success">{success}</Typography>}
           </form>
-          {registerStatus === "rejected" && (
-            <Typography
-              sx={{
-                fontWeight: "400 italic",
-                textAlign: "center",
-                color: `${theme.palette.warning.main}`,
-                mb: 2,
-              }}
-            >
-              {registerError?.error.message}
-            </Typography>
-          )}
-          {registerStatus === "pending" && (
-            <Typography
-              sx={{
-                fontWeight: "400 italic",
-                textAlign: "center",
-                color: `${theme.palette.warning.main}`,
-                mb: 2,
-              }}
-            >
-              Registering.....
-            </Typography>
-          )}
-          {registerStatus === "success" && (
-            <Typography
-              sx={{
-                fontWeight: "400 italic",
-                textAlign: "center",
-                color: `${theme.palette.green[500]}`,
-                mb: 2,
-              }}
-            >
-              Successfully registered!
-            </Typography>
-          )}
-          <Typography
-            sx={{
-              color: "warnings",
-            }}
-          ></Typography>
           <Divider
             sx={{
               fontSize: "14px",
@@ -324,7 +379,7 @@ const Register = () => {
           </Divider>
 
           {/* login option start here */}
-          <Box
+          {/* <Box
             sx={{
               mt: 2,
               "& .MuiButton-startIcon": {},
@@ -346,7 +401,7 @@ const Register = () => {
               imgUrl="https://img.icons8.com/ios-glyphs/30/mac-os.png"
               altTitle="apple-logo"
             />
-          </Box>
+          </Box> */}
           <Box>
             <Box
               sx={{
@@ -363,13 +418,10 @@ const Register = () => {
                   color: `${theme.palette.text[400]}`,
                 }}
               >
-                Already Have Account?
+                Already have Account?
               </Typography>
               <Button
-                onClick={() => {
-                  dispatch(setDialogClose());
-                  dispatch(setLoginDialogOpen());
-                }}
+                onClick={navigateToSignin}
                 sx={{
                   textTransform: "capitalize",
                   fontSize: "14px",
@@ -383,7 +435,7 @@ const Register = () => {
                   },
                 }}
               >
-                Sign In
+                Sign in
               </Button>
             </Box>
             <Divider />
@@ -396,25 +448,23 @@ const Register = () => {
               }}
             >
               This site is protected by reCAPTCHA Enterprise and the Google{" "}
-              <Button
+              <a
                 style={{
                   color: `${theme.palette.text[400]}`,
-                  textDecoration: "underline",
-                  textTransform: "capitalize",
                 }}
+                href="#"
               >
                 Privacy Policy
-              </Button>{" "}
+              </a>{" "}
               and{" "}
-              <Button
+              <a
                 style={{
                   color: `${theme.palette.text[400]}`,
-                  textDecoration: "underline",
-                  textTransform: "capitalize",
                 }}
+                href="#"
               >
                 Terms of Service
-              </Button>{" "}
+              </a>{" "}
               apply.
             </Typography>
           </Box>
@@ -424,4 +474,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default SignUp;

@@ -1,9 +1,10 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import cartSlice from "./slices/cartSlice";
 import productReducer from "./slices/productSlice";
-import authReducer from "./slices/authSlice";
-import authModalReducer from "./slices/authModalSlice";
+import authReducer from "./slices/auth/authReducer";
+import authModalReducer from "./slices/auth/authModalReducer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import {
   persistStore,
   persistReducer,
@@ -14,15 +15,17 @@ import {
   PURGE,
   REGISTER,
 } from "redux-persist";
+import authenticatedReducer from "./slices/auth/authenticateReducer";
 
 const persistConfig = {
   key: "root",
-  whitelist: ["cart", "authModal", "auth"],
+  whitelist: ["cart", "auth", "authenticate", "product"],
   storage: AsyncStorage,
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
+  authenticate: authenticatedReducer,
   cart: cartSlice,
   product: productReducer,
   authModal: authModalReducer,

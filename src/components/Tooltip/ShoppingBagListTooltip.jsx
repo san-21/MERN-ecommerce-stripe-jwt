@@ -1,14 +1,7 @@
-import {
-  Box,
-  Button,
-  Divider,
-  Icon,
-  IconButton,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Divider, IconButton, Typography } from "@mui/material";
 import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
 
-import React, { useState } from "react";
+import React from "react";
 import { useTheme } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -27,14 +20,29 @@ const ShoppingBagListTooltip = () => {
 
   const theme = useTheme();
   const navigate = useNavigate();
-  const handleDecrement = (productId) => {
-    dispatch(quantityDecrement(productId));
+
+  const handleDecrement = (productId, productColor, productSize) => {
+    dispatch(
+      quantityDecrement({
+        id: productId,
+        color: productColor,
+        size: productSize,
+      })
+    );
   };
-  const handleIncrement = (productId) => {
-    dispatch(quantityIncrement(productId));
+  const handleIncrement = (productId, productColor, productSize) => {
+    dispatch(
+      quantityIncrement({
+        id: productId,
+        color: productColor,
+        size: productSize,
+      })
+    );
   };
-  const handleRemove = (productId) => {
-    dispatch(removeProduct(productId));
+  const handleRemove = (productId, productColor, productSize) => {
+    dispatch(
+      removeProduct({ id: productId, color: productColor, size: productSize })
+    );
   };
   return (
     <Box

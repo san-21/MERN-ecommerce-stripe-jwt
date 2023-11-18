@@ -2,10 +2,6 @@ import { useState } from "react";
 import {
   Box,
   Button,
-  Card,
-  Divider,
-  ListItem,
-  ListItemButton,
   ListItemIcon,
   ListItemText,
   MenuItem,
@@ -16,8 +12,7 @@ import {
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import React from "react";
-import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
-import { styled } from "@mui/material/styles";
+
 import AnnouncementOutlinedIcon from "@mui/icons-material/AnnouncementOutlined";
 import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
 import LocalAtmOutlinedIcon from "@mui/icons-material/LocalAtmOutlined";
@@ -26,14 +21,13 @@ import StoreOutlinedIcon from "@mui/icons-material/StoreOutlined";
 import HttpsOutlinedIcon from "@mui/icons-material/HttpsOutlined";
 import MailOutlineOutlinedIcon from "@mui/icons-material/MailOutlineOutlined";
 import CssBaseline from "@mui/material/CssBaseline";
-import Register from "../authentication/Register";
+
 import { useDispatch } from "react-redux";
-import { setDialogOpen } from "../../redux/slices/authModalSlice";
+
+import { setSignupOpen } from "../../redux/slices/auth/authModalReducer";
 const Signin = ({}) => {
   const dispatch = useDispatch();
-  const handleRegisterDialogOpen = () => {
-    dispatch(setDialogOpen());
-  };
+
   return (
     <Box>
       <MenuList dense>
@@ -42,7 +36,7 @@ const Signin = ({}) => {
           <Button
             fullWidth
             variant="contained"
-            onClick={() => dispatch(setDialogOpen())}
+            onClick={() => dispatch(setSignupOpen())}
           >
             Sign In | Create Acoount
           </Button>

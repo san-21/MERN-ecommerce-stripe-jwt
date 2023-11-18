@@ -1,26 +1,22 @@
 import React from "react";
-import axios from "axios";
+
 import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
 
 import { Box, Button } from "@mui/material";
 import { useSelector, useDispatch } from "react-redux";
-import { setLoginDialogOpen } from "../../redux/slices/authModalSlice";
+
+import { setLoginOpen } from "../../redux/slices/auth/authModalReducer";
+import { instance } from "../../services/axiosClient";
 export default function CheckOutButtonNew({ cartItems }) {
   const dispatch = useDispatch();
-  const loginStatus = useSelector((state) => state.auth.loginStatus);
+  const userAuthenticated = useSelector(
+    (state) => state.authenticate.userAuthenticated
+  );
   /*******First way */
   const handleCheckout = async () => {
-    const res = await axios.post(
-      "http://localhost:4000/api/stripe/create-checkout-session",
-      {
-        cartItems,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const res = await instance.post("/api/stripe/create-checkout-session", {
+      cartItems,
+    });
 
     const data = await res.data;
     console.log(data);
@@ -29,7 +25,7 @@ export default function CheckOutButtonNew({ cartItems }) {
 
   return (
     <Box>
-      {loginStatus === "success" && (
+      {userAuthenticated && (
         <Button
           onClick={handleCheckout}
           type="submit"
@@ -49,27 +45,26 @@ export default function CheckOutButtonNew({ cartItems }) {
           Check Out
         </Button>
       )}
-      {loginStatus === "rejected" ||
-        (loginStatus === "" && (
-          <Button
-            onClick={() => dispatch(setLoginDialogOpen())}
-            type="submit"
-            sx={{
-              mt: 12,
-              textTransform: "capitalize",
-              height: "50px",
-              "&:hover": {
-                color: "primary",
-              },
-            }}
-            size="large"
-            variant="contained"
-            fullWidth
-            startIcon={<WorkOutlineOutlinedIcon />}
-          >
-            Login To Check Out
-          </Button>
-        ))}
+      {!userAuthenticated && (
+        <Button
+          onClick={() => dispatch(setLoginOpen())}
+          type="submit"
+          sx={{
+            mt: 12,
+            textTransform: "capitalize",
+            height: "50px",
+            "&:hover": {
+              color: "primary",
+            },
+          }}
+          size="large"
+          variant="contained"
+          fullWidth
+          startIcon={<WorkOutlineOutlinedIcon />}
+        >
+          Login To Check Out
+        </Button>
+      )}
     </Box>
   );
 }
